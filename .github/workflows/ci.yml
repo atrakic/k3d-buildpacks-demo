@@ -1,0 +1,53 @@
+name: CI-buildpacks
+
+on:
+  [workflow_dispatch, push]
+
+env:
+  K3D_CLUSTER_NAME: buildpacks-demo
+  K3D_VERSION: v4.4.7
+  K3D_URL: https://raw.githubusercontent.com/rancher/k3d/main/install.sh
+  APP: myproj/demo:v1.0.0
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-20.04
+    if: "!contains(github.event.head_commit.message, '[skip-ci]')"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: "Build app"
+        run: |
+          curl -sSL "https://github.com/buildpacks/pack/releases/download/v0.19.0/pack-v0.19.0-linux.tgz" | sudo tar -C /usr/local/bin/ --no-same-owner -xzv pack
+          pack build $APP --path apps/java-maven --builder cnbs/sample-builder:bionic
+
+      - name: "Setup k3d"
+        run: |
+          curl --silent --fail $K3D_URL | TAG=$K3D_VERSION bash
+          k3d --version
+          #sudo apt install -y libnss-myhostname
+
+      - name: "Setup k3d registry"
+        run: |
+          k3d registry create registry.localhost --port 5000
+
+      - name: "Create k3d cluster"
+        run: |
+          k3d cluster create $K3D_CLUSTER_NAME \
+            --agents 1 \
+            -p "8080:80@loadbalancer" \
+            --api-port 6443 \
+            --k3s-server-arg "--no-deploy=metrics-server" \
+            --registry-use k3d-registry.localhost:5000 \
+            --registry-config registries-local.yaml
+
+      - name: "Cluster info"
+        run: |
+          kubectl config use-context k3d-$K3D_CLUSTER_NAME
+          kubectl cluster-info
+
+      - name: "Deploy app"
+        run: |
+          k3d image import $APP -c $K3D_CLUSTER_NAME --verbose
+          kubectl apply -f manifests/pod.yaml
