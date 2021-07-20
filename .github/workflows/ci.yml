@@ -51,6 +51,7 @@ jobs:
         run: |
           k3d image import $APP -c $K3D_CLUSTER_NAME --verbose
           kubectl apply -f manifests/deploy.yml
+          kubectl rollout status deployment demo
           kubectl get deployment,svc,po,ing
 
       - name: "Test app"
