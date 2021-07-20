@@ -54,6 +54,6 @@ jobs:
           kubectl rollout status deployment demo
           kubectl get deployment,svc,po,ing
 
-      - name: "Test app"
-        run: |
-          curl -sSL -f localhost:8080
+      # - name: "Test app"
+      #   run: |
+      #    curl -sSL -f localhost:8080
