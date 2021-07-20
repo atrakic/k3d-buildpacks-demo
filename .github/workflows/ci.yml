@@ -30,7 +30,7 @@ jobs:
 
       - name: "Setup k3d registry"
         run: |
-          k3d registry create registry.localhost --port 5000
+          k3d registry create registry.localhost --no-help --port 5000
 
       - name: "Create k3d cluster"
         run: |
