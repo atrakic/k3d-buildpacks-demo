@@ -56,5 +56,5 @@ jobs:
       - name: "Test app"
         run: |
           kubectl wait --for=condition=available deployment -l "app=demo" --timeout=60s
-          kubectl get all
+          kubectl get all -o wide
           #curl -sSL -f localhost:8080

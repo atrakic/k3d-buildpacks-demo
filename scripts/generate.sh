@@ -10,10 +10,10 @@ main() {
   local file=manifests/deploy.yml
 
   echo --- > $file
-  kubectl create service clusterip $APP --tcp=80:8080 --dry-run=client -o yaml >> $file
+  kubectl create service clusterip $APP --tcp=80:8080 --dry-run=client -o yaml | grep -Ev "creationTimestamp" >> $file
 
   echo --- >> $file
-  kubectl create deployment $APP --image $IMAGE --dry-run=client -o yaml | grep -Ev status >> $file
+  kubectl create deployment $APP --image $IMAGE --dry-run=client -o yaml | grep -Ev "status|creationTimestamp" >> $file
 
   [[ -z $NO_INGRESS ]] && cat >> $file <<EOF
 ---
