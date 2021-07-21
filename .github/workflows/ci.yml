@@ -51,9 +51,10 @@ jobs:
         run: |
           k3d image import $APP -c $K3D_CLUSTER_NAME --verbose
           kubectl apply -f manifests/deploy.yml
-          kubectl rollout status deployment demo
-          kubectl get deployment,svc,po,ing
+          #kubectl rollout status deployment demo
+          kubectl wait --for=condition=available deployment -l "app=demo" --timeout=60s
+          kubectl get all
 
-      # - name: "Test app"
-      #   run: |
-      #    curl -sSL -f localhost:8080
+      - name: "Test app"
+        run: |
+          curl -sSL -f localhost:8080
